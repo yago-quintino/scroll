@@ -1,12 +1,12 @@
 import "./App.css";
-import Characters from "./Characters";
+import CharactersScroll from "./CharactersScroll";
 
 function App() {
   return (
     <div className="App">
       <div className="container">
         <h1>Rick and Morty</h1>
-        <Characters />
+        <CharactersScroll />
       </div>
     </div>
   );

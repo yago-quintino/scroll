@@ -1,21 +1,48 @@
-import React, { useState } from "react";
-import { useQuery } from "react-query";
+import { useEffect } from "react";
+import { useRef } from "react";
+import { useInfiniteQuery } from "react-query";
 import Character from "./Character";
 
-export default function Characters() {
-  const [page, setPage] = useState(1);
+export default function CharactersScroll() {
+  const scrollObserverRef = useRef();
 
-  const { data, isLoading, isError, isPreviousData, status } = useQuery(
-    ["characters", page],
-    fetchCharacters,
-    {
-      keepPreviousData: true,
+  const { data, isLoading, isError, error, hasNextPage, fetchNextPage } =
+    useInfiniteQuery(
+      "characters",
+      ({ pageParam = 1 }) => fetchCharacters(pageParam),
+      {
+        getNextPageParam: (lastPage, pages) => {
+          if (pages.length < lastPage.info.pages) {
+            return pages.length + 1;
+          } else {
+            return undefined;
+          }
+        },
+      }
+    );
+
+  function handleScrollObserver(entries) {
+    const [scrollEntry] = entries;
+    if (scrollEntry.isIntersecting && hasNextPage) {
+      fetchNextPage();
     }
-  );
+  }
 
-  async function fetchCharacters({ queryKey }) {
+  useEffect(() => {
+    const observer = new IntersectionObserver(handleScrollObserver);
+
+    if (scrollObserverRef.current) observer.observe(scrollObserverRef.current);
+
+    return () => {
+      if (scrollObserverRef.current) {
+        return observer.disconnect(scrollObserverRef.current);
+      }
+    };
+  }, [scrollObserverRef]);
+
+  async function fetchCharacters(pageParam) {
     const response = await fetch(
-      `https://rickandmortyapi.com/api/character?page=${queryKey[1]}`
+      `https://rickandmortyapi.com/api/character?page=${pageParam}`
     );
     const data = await response.json();
     return data;
@@ -25,28 +52,19 @@ export default function Characters() {
     return <div>Loading...</div>;
   }
   if (isError) {
-    return <div>Error...</div>;
+    return <div>{error}...</div>;
   }
 
   return (
-    <div className="characters">
-      {data?.results?.map((character) => {
-        return <Character key={character.id} character={character} />;
-      })}
-      <div>
-        <button
-          disabled={isPreviousData || !data.info.prev}
-          onClick={(_) => setPage((p) => p - 1)}
-        >
-          Previous
-        </button>
-        <button
-          disabled={isPreviousData || !data.info.next}
-          onClick={(_) => setPage((p) => p + 1)}
-        >
-          Next
-        </button>
+    <div>
+      <div className="characters">
+        {data.pages.map((charactersGroup) => {
+          return charactersGroup.results.map((character) => {
+            return <Character key={character.id} character={character} />;
+          });
+        })}
       </div>
+      <div id="scroll" ref={scrollObserverRef}></div>
     </div>
   );
 }
