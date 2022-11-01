@@ -60,14 +60,12 @@ export default function CharactersScroll() {
   }
 
   return (
-    <div>
-      <div className="characters">
-        {data.pages.map((charactersGroup) => {
-          return charactersGroup.results.map((character) => {
-            return <Character key={character.id} character={character} />;
-          });
-        })}
-      </div>
+    <div className="characters">
+      {data.pages.map((charactersGroup) => {
+        return charactersGroup.results.map((character) => {
+          return <Character key={character.id} character={character} />;
+        });
+      })}
       <div id="scroll" ref={scrollObserverRef}></div>
     </div>
   );
