@@ -4,7 +4,7 @@ import { useInfiniteQuery } from "react-query";
 import Character from "./Character";
 
 export default function CharactersScroll() {
-  const scrollObserverRef = useRef();
+  const scrollObserverRef = useRef(null);
 
   const { data, isLoading, isError, error, hasNextPage, fetchNextPage } =
     useInfiniteQuery(
@@ -23,7 +23,9 @@ export default function CharactersScroll() {
 
   function handleScrollObserver(entries) {
     const [scrollEntry] = entries;
+
     if (scrollEntry.isIntersecting && hasNextPage) {
+      console.log("Fetch is working");
       fetchNextPage();
     }
   }
@@ -31,16 +33,18 @@ export default function CharactersScroll() {
   useEffect(() => {
     const observer = new IntersectionObserver(handleScrollObserver);
 
-    if (scrollObserverRef.current) observer.observe(scrollObserverRef.current);
-
+    if (scrollObserverRef.current) {
+      observer.observe(scrollObserverRef.current);
+    }
     return () => {
       if (scrollObserverRef.current) {
-        return observer.disconnect(scrollObserverRef.current);
+        observer.unobserve(scrollObserverRef.current);
       }
     };
-  }, [scrollObserverRef]);
+  }, [data]);
 
   async function fetchCharacters(pageParam) {
+    console.log(pageParam);
     const response = await fetch(
       `https://rickandmortyapi.com/api/character?page=${pageParam}`
     );
