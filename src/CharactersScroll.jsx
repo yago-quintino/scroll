@@ -18,6 +18,7 @@ export default function CharactersScroll() {
             return undefined;
           }
         },
+        refetchOnWindowFocus: false,
       }
     );
 
@@ -25,7 +26,6 @@ export default function CharactersScroll() {
     const [scrollEntry] = entries;
 
     if (scrollEntry.isIntersecting && hasNextPage) {
-      console.log("Fetch is working");
       fetchNextPage();
     }
   }
@@ -44,7 +44,6 @@ export default function CharactersScroll() {
   }, [data]);
 
   async function fetchCharacters(pageParam) {
-    console.log(pageParam);
     const response = await fetch(
       `https://rickandmortyapi.com/api/character?page=${pageParam}`
     );
